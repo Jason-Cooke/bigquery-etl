@@ -247,22 +247,11 @@ udf_histogram_to_threshold_count(payload.processes.content.histograms.input_even
 
 udf_histogram_to_threshold_count(payload.histograms.ghost_windows, 1),
 udf_histogram_to_threshold_count(payload.processes.content.histograms.ghost_windows, 1),
-udf_get_user_prefs(JSON_EXTRACT(additional_properties, "$.environment.settings.user_prefs")).*
+udf_get_user_prefs(JSON_EXTRACT(additional_properties, "$.environment.settings.user_prefs")).*,
+udf_scalar_row(payload.processes, additional_properties).*
+
   /*
-  -- Generate each function (udf_scalar_row etc) from json, basic same structure as get_user_prefs
   TODO
-  udf_scalar_row(STRUCT(
-    STRUCT(
-      payload.processes.content.scalars AS content,
-      payload.processes.gpu.scalars AS gpu,
-      payload.scalars AS parent
-    ) AS scalars,
-    STRUCT(
-      payload.processes.content.keyed_scalars AS content,
-      payload.processes.gpu.keyed_scalars AS gpu,
-      payload.keyed_scalars AS parent
-    ) AS keyed_scalars,
-    ARRAY(SELECT * FROM scalarDefinitions WHERE process != "dynamic") AS scalarDefinitions)).*,
   udf_histogram_row(STRUCT(
     STRUCT(
       payload.processes.content.histograms AS content,
