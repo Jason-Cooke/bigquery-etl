@@ -32,13 +32,20 @@ CREATE TEMP FUNCTION
       UNNEST(udf_json_extract_histogram(histogram).values)
     WHERE
       value > 0));
-CREATE TEMP FUNCTION udf_get_experiments(experiments ARRAY<STRUCT<key STRING, value STRUCT<branch STRING>>>)
-RETURNS STRUCT<key_value ARRAY<STRUCT<key STRING, value STRING>>> AS ((
-SELECT STRUCT(ARRAY_AGG((
-    SELECT AS STRUCT
-        key AS key,
-        value.branch AS value)) as key_value)
-    FROM UNNEST(experiments)));
+CREATE TEMP FUNCTION
+  udf_get_experiments(experiments ARRAY<STRUCT<key STRING, value STRUCT<branch STRING>>>)
+  RETURNS STRUCT<key_value ARRAY<STRUCT<key STRING, value STRING>>> AS ((
+    SELECT
+    AS STRUCT
+      ARRAY_AGG(
+        STRUCT(
+          key,
+          value.branch AS value
+        )
+      ) as key_value
+    FROM
+      UNNEST(experiments)
+  ));
 CREATE TEMP FUNCTION udf_get_key(map ANY TYPE, k ANY TYPE) AS (
  (
    SELECT key_value.value
@@ -48,9 +55,7 @@ CREATE TEMP FUNCTION udf_get_key(map ANY TYPE, k ANY TYPE) AS (
  )
 );
 CREATE TEMP FUNCTION
-  udf_get_old_user_prefs(user_prefs_json STRING) AS ((
-    SELECT
-      AS STRUCT
+  udf_get_old_user_prefs(user_prefs_json STRING) AS (STRUCT(
       SAFE_CAST(JSON_EXTRACT_SCALAR(user_prefs_json, "$.dom.ipc.process_count") AS INT64) AS dom_ipc_process_count,
       SAFE_CAST(JSON_EXTRACT_SCALAR(user_prefs_json, "$.extensions.allow-non_mpc-extensions") AS BOOL) AS extensions_allow_non_mpc_extensions
 ));
@@ -69,10 +74,8 @@ CREATE TEMP FUNCTION
     ARRAY(
     SELECT
       AS STRUCT
-      key,
-      (
-      SELECT
-        AS STRUCT
+      _1.key,
+      STRUCT(
         ANY_VALUE(IF(_0.key = 0,  _0.value, NULL)) AS offered,
         ANY_VALUE(IF(_0.key = 1,  _0.value, NULL)) AS action_1,
         ANY_VALUE(IF(_0.key = 2,  _0.value, NULL)) AS action_2,
@@ -94,11 +97,12 @@ CREATE TEMP FUNCTION
         ANY_VALUE(IF(_0.key = 27, _0.value, NULL)) AS reopen_dismissal_close_button,
         ANY_VALUE(IF(_0.key = 28, _0.value, NULL)) AS reopen_dismissal_not_now,
         ANY_VALUE(IF(_0.key = 30, _0.value, NULL)) AS reopen_open_submenu,
-        ANY_VALUE(IF(_0.key = 31, _0.value, NULL)) AS reopen_learn_more
-      FROM
-        UNNEST(udf_json_extract_histogram(value).values) AS _0) AS value
+        ANY_VALUE(IF(_0.key = 31, _0.value, NULL)) AS reopen_learn_more) AS value
     FROM
-      UNNEST(popup_notification_stats)));
+      UNNEST(popup_notification_stats) AS _1,
+      UNNEST(udf_json_extract_histogram(_1.value).values) AS _0
+    GROUP BY
+      _1.key));
 CREATE TEMP FUNCTION
   udf_get_search_counts(search_counts ARRAY<STRUCT<key STRING,
     value STRING>>) AS (
@@ -112,22 +116,6 @@ CREATE TEMP FUNCTION
       UNNEST(search_counts),
       UNNEST([REPLACE(key, "in-content.", "in-content:")]) AS key,
       UNNEST([STRPOS(key, ".")]) AS pos));
-CREATE TEMP FUNCTION
-  udf_get_theme(theme STRUCT<app_disabled BOOL, blocklisted BOOL, description STRING, has_binary_components BOOL, id STRING, install_day INT64, name STRING, scope INT64, update_day INT64, user_disabled BOOL, version STRING>) AS ((
-  SELECT
-    AS STRUCT
-    theme.app_disabled as app_disabled,
-    theme.blocklisted as blocklisted,
-    theme.description as description,
-    theme.has_binary_components as has_binary_components,
-    IFNULL(theme.id, "MISSING") as id,
-    theme.install_day as install_day,
-    theme.name as name,
-    theme.scope as scope,
-    theme.update_day as update_day,
-    theme.user_disabled as user_disabled,
-    theme.version as version
-));
 CREATE TEMP FUNCTION udf_get_user_prefs(user_prefs STRING)
 RETURNS STRUCT<user_pref_browser_launcherprocess_enabled BOOLEAN,
   user_pref_browser_search_widget_innavbar BOOLEAN,
@@ -143,8 +131,7 @@ RETURNS STRUCT<user_pref_browser_launcherprocess_enabled BOOLEAN,
   user_pref_security_enterprise_roots_auto_enabled BOOLEAN,
   user_pref_security_enterprise_roots_enabled BOOLEAN,
   user_pref_security_pki_mitm_detected BOOLEAN,
-  user_pref_network_trr_mode INT64> AS ((
-  SELECT AS STRUCT
+  user_pref_network_trr_mode INT64> AS (STRUCT(
     CAST(JSON_EXTRACT_SCALAR(user_prefs, '$.browser.launcherProcess.enabled') AS BOOL),
     CAST(JSON_EXTRACT_SCALAR(user_prefs, '$.browser.search.widget.inNavBar') AS BOOL),
     JSON_EXTRACT_SCALAR(user_prefs, '$.browser.search.region'),
@@ -183,7 +170,7 @@ CREATE TEMP FUNCTION
     type STRING,
     update_day INT64>>>,
     active_addons_json STRING)
-  RETURNS ARRAY<STRUCT< addon_id STRING,
+  RETURNS ARRAY<STRUCT<addon_id STRING,
   blocklisted BOOL,
   name STRING,
   user_disabled BOOL,
@@ -650,8 +637,7 @@ scalar_content_telemetry_event_counts ARRAY<STRUCT<key STRING, value INT64>>,
 scalar_content_webrtc_sdp_parser_diff ARRAY<STRUCT<key STRING, value INT64>>,
 scalar_content_webrtc_video_recv_codec_used ARRAY<STRUCT<key STRING, value INT64>>,
 scalar_content_webrtc_video_send_codec_used ARRAY<STRUCT<key STRING, value INT64>>>
-  AS ((
-    SELECT AS STRUCT
+  AS (STRUCT(
       processes.parent.scalars.a11y_indicator_acted_on AS scalar_parent_a11y_indicator_acted_on,
 processes.parent.scalars.a11y_instantiators AS scalar_parent_a11y_instantiators,
 processes.parent.scalars.aushelper_websense_reg_version AS scalar_parent_aushelper_websense_reg_version,
@@ -1140,7 +1126,19 @@ SELECT
 
   -- Legacy/disabled addon and configuration settings per Bug 1390814. Please note that |disabled_addons_ids| may go away in the future.
   udf_js_get_disabled_addons(environment.addons.active_addons, JSON_EXTRACT(additional_properties, "$.payload.addon_details")) AS disabled_addons_ids, -- One per item in payload.addonDetails.XPI
-  udf_get_theme(environment.addons.theme) AS active_theme,
+  STRUCT(
+    environment.addons.theme.app_disabled as app_disabled,
+    environment.addons.theme.blocklisted as blocklisted,
+    environment.addons.theme.description as description,
+    environment.addons.theme.has_binary_components as has_binary_components,
+    IFNULL(environment.addons.theme.id, "MISSING") as id,
+    environment.addons.theme.install_day as install_day,
+    environment.addons.theme.name as name,
+    environment.addons.theme.scope as scope,
+    environment.addons.theme.update_day as update_day,
+    environment.addons.theme.user_disabled as user_disabled,
+    environment.addons.theme.version as version
+  ) AS active_theme,
   environment.settings.blocklist_enabled,
   environment.settings.addon_compatibility_check_enabled,
   environment.settings.telemetry_enabled,

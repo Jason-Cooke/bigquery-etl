@@ -322,8 +322,7 @@ scalar_content_telemetry_event_counts ARRAY<STRUCT<key STRING, value INT64>>,
 scalar_content_webrtc_sdp_parser_diff ARRAY<STRUCT<key STRING, value INT64>>,
 scalar_content_webrtc_video_recv_codec_used ARRAY<STRUCT<key STRING, value INT64>>,
 scalar_content_webrtc_video_send_codec_used ARRAY<STRUCT<key STRING, value INT64>>>
-  AS ((
-    SELECT AS STRUCT
+  AS (STRUCT(
       processes.parent.scalars.a11y_indicator_acted_on AS scalar_parent_a11y_indicator_acted_on,
 processes.parent.scalars.a11y_instantiators AS scalar_parent_a11y_instantiators,
 processes.parent.scalars.aushelper_websense_reg_version AS scalar_parent_aushelper_websense_reg_version,

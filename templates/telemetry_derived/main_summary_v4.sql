@@ -163,7 +163,19 @@ SELECT
 
   -- Legacy/disabled addon and configuration settings per Bug 1390814. Please note that |disabled_addons_ids| may go away in the future.
   udf_js_get_disabled_addons(environment.addons.active_addons, JSON_EXTRACT(additional_properties, "$.payload.addon_details")) AS disabled_addons_ids, -- One per item in payload.addonDetails.XPI
-  udf_get_theme(environment.addons.theme) AS active_theme,
+  STRUCT(
+    environment.addons.theme.app_disabled as app_disabled,
+    environment.addons.theme.blocklisted as blocklisted,
+    environment.addons.theme.description as description,
+    environment.addons.theme.has_binary_components as has_binary_components,
+    IFNULL(environment.addons.theme.id, "MISSING") as id,
+    environment.addons.theme.install_day as install_day,
+    environment.addons.theme.name as name,
+    environment.addons.theme.scope as scope,
+    environment.addons.theme.update_day as update_day,
+    environment.addons.theme.user_disabled as user_disabled,
+    environment.addons.theme.version as version
+  ) AS active_theme,
   environment.settings.blocklist_enabled,
   environment.settings.addon_compatibility_check_enabled,
   environment.settings.telemetry_enabled,

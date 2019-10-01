@@ -1,7 +1,5 @@
 CREATE TEMP FUNCTION
-  udf_get_theme(theme STRUCT<app_disabled BOOL, blocklisted BOOL, description STRING, has_binary_components BOOL, id STRING, install_day INT64, name STRING, scope INT64, update_day INT64, user_disabled BOOL, version STRING>) AS ((
-  SELECT
-    AS STRUCT
+  udf_get_theme(theme STRUCT<app_disabled BOOL, blocklisted BOOL, description STRING, has_binary_components BOOL, id STRING, install_day INT64, name STRING, scope INT64, update_day INT64, user_disabled BOOL, version STRING>) AS (STRUCT(
     theme.app_disabled as app_disabled,
     theme.blocklisted as blocklisted,
     theme.description as description,

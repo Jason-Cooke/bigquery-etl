@@ -1,7 +1,5 @@
 CREATE TEMP FUNCTION
-  udf_get_old_user_prefs(user_prefs_json STRING) AS ((
-    SELECT
-      AS STRUCT
+  udf_get_old_user_prefs(user_prefs_json STRING) AS (STRUCT(
       SAFE_CAST(JSON_EXTRACT_SCALAR(user_prefs_json, "$.dom.ipc.process_count") AS INT64) AS dom_ipc_process_count,
       SAFE_CAST(JSON_EXTRACT_SCALAR(user_prefs_json, "$.extensions.allow-non_mpc-extensions") AS BOOL) AS extensions_allow_non_mpc_extensions
 ));

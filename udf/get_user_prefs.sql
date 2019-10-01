@@ -13,8 +13,7 @@ RETURNS STRUCT<user_pref_browser_launcherprocess_enabled BOOLEAN,
   user_pref_security_enterprise_roots_auto_enabled BOOLEAN,
   user_pref_security_enterprise_roots_enabled BOOLEAN,
   user_pref_security_pki_mitm_detected BOOLEAN,
-  user_pref_network_trr_mode INT64> AS ((
-  SELECT AS STRUCT
+  user_pref_network_trr_mode INT64> AS (STRUCT(
     CAST(JSON_EXTRACT_SCALAR(user_prefs, '$.browser.launcherProcess.enabled') AS BOOL),
     CAST(JSON_EXTRACT_SCALAR(user_prefs, '$.browser.search.widget.inNavBar') AS BOOL),
     JSON_EXTRACT_SCALAR(user_prefs, '$.browser.search.region'),

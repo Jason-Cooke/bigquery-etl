@@ -12,7 +12,7 @@ CREATE TEMP FUNCTION
     type STRING,
     update_day INT64>>>,
     active_addons_json STRING)
-  RETURNS ARRAY<STRUCT< addon_id STRING,
+  RETURNS ARRAY<STRUCT<addon_id STRING,
   blocklisted BOOL,
   name STRING,
   user_disabled BOOL,
