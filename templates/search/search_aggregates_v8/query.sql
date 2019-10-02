@@ -23,6 +23,7 @@ FROM
   search_clients_daily_v8
 WHERE
   submission_date = @submission_date
+  AND engine IS NOT null
 GROUP BY
   submission_date,
   addon_version,
