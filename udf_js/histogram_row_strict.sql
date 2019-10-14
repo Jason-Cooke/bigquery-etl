@@ -526,7 +526,7 @@ function extractCountHistogram(histogram) {
   return extractHistogramMap(histogram)["0"];
 }
 function extractFlagHistogram(histogram) {
-  val values = extractHistogramMap(histogram);
+  let values = extractHistogramMap(histogram);
   if (values["0"] === 0 && values["1"] === 1) {
     return true;
   } else if (values["0"] === 1 && values["1"] === 0) {
@@ -534,7 +534,13 @@ function extractFlagHistogram(histogram) {
   }
 }
 function extractCategoricalHistogramMap(histogram, labels) {
-  return extractHistogramMap(histogram);
+  let result = [];
+  for (let [key, value] of Object.entries(extractHistogramMap(histogram))) {
+    try {
+      result.push({key: labels[parseInt(key)], value})
+    } catch (error) {}
+  }
+  return result;
 }
 return {
   histogram_parent_a11y_consumers: extractHistogramMap(histograms.parent.a11y_consumers),
@@ -657,20 +663,12 @@ return {
   histogram_parent_fx_tab_switch_update_ms: extractHistogramMap(histograms.parent.fx_tab_switch_update_ms),
   histogram_parent_fx_urlbar_selected_result_index: extractHistogramMap(histograms.parent.fx_urlbar_selected_result_index),
   histogram_content_fx_urlbar_selected_result_index: extractHistogramMap(histograms.content.fx_urlbar_selected_result_index),
-  histogram_parent_fx_urlbar_selected_result_index_by_type: (
-    SELECT AS STRUCT
-      key,
-      extractHistogramMap(value)
-    FROM
-      UNNEST(histograms.parent.fx_urlbar_selected_result_index_by_type)
-  ),
-  histogram_content_fx_urlbar_selected_result_index_by_type: (
-    SELECT AS STRUCT
-      key,
-      extractHistogramMap(value)
-    FROM
-      UNNEST(histograms.content.fx_urlbar_selected_result_index_by_type)
-  ),
+  histogram_parent_fx_urlbar_selected_result_index_by_type: histograms.parent.fx_urlbar_selected_result_index_by_type.map(element -> {
+    return {key: element.key, value: extractHistogramMap(value)};
+  }),
+  histogram_content_fx_urlbar_selected_result_index_by_type: histograms.content.fx_urlbar_selected_result_index_by_type.map(element -> {
+    return {key: element.key, value: extractHistogramMap(value)};
+  }),
   histogram_parent_fx_urlbar_selected_result_method: extractCategoricalHistogramMap(
     histograms.parent.fx_urlbar_selected_result_method,
     ['enter', 'enterSelection', 'click', 'arrowEnterSelection', 'tabEnterSelection', 'rightClickEnter']
@@ -702,10 +700,18 @@ return {
   histogram_content_http_transaction_is_ssl: extractHistogramMap(histograms.content.http_transaction_is_ssl),
   histogram_parent_input_event_response_coalesced_ms: extractHistogramMap(histograms.parent.input_event_response_coalesced_ms),
   histogram_content_input_event_response_coalesced_ms: extractHistogramMap(histograms.content.input_event_response_coalesced_ms),
-  histogram_parent_ipc_read_main_thread_latency_ms: (SELECT AS STRUCT key, extractHistogramMap(value) FROM UNNEST(histograms.parent.ipc_read_main_thread_latency_ms)),
-  histogram_content_ipc_read_main_thread_latency_ms: (SELECT AS STRUCT key, extractHistogramMap(value) FROM UNNEST(histograms.content.ipc_read_main_thread_latency_ms)),
-  histogram_gpu_ipc_read_main_thread_latency_ms: (SELECT AS STRUCT key, extractHistogramMap(value) FROM UNNEST(histograms.gpu.ipc_read_main_thread_latency_ms)),
-  histogram_parent_memory_distribution_among_content: (SELECT AS STRUCT key, extractHistogramMap(value) FROM UNNEST(histograms.parent.memory_distribution_among_content)),
+  histogram_parent_ipc_read_main_thread_latency_ms: histograms.parent.ipc_read_main_thread_latency_ms.map(element -> {
+    return {key: element.key, value: extractHistogramMap(value)};
+  }),
+  histogram_content_ipc_read_main_thread_latency_ms: histograms.content.ipc_read_main_thread_latency_ms.map(element -> {
+    return {key: element.key, value: extractHistogramMap(value)};
+  }),
+  histogram_gpu_ipc_read_main_thread_latency_ms: histograms.gpu.ipc_read_main_thread_latency_ms.map(element -> {
+    return {key: element.key, value: extractHistogramMap(value)};
+  }),
+  histogram_parent_memory_distribution_among_content: histograms.parent.memory_distribution_among_content.map(element -> {
+    return {key: element.key, value: extractHistogramMap(value)};
+  }),
   histogram_parent_memory_heap_allocated: extractHistogramMap(histograms.parent.memory_heap_allocated),
   histogram_content_memory_heap_allocated: extractHistogramMap(histograms.content.memory_heap_allocated),
   histogram_parent_memory_resident_fast: extractHistogramMap(histograms.parent.memory_resident_fast),
@@ -749,8 +755,12 @@ return {
   histogram_parent_pwmgr_prompt_remember_action: extractHistogramMap(histograms.parent.pwmgr_prompt_remember_action),
   histogram_parent_pwmgr_prompt_update_action: extractHistogramMap(histograms.parent.pwmgr_prompt_update_action),
   histogram_parent_pwmgr_saving_enabled: extractHistogramMap(histograms.parent.pwmgr_saving_enabled),
-  histogram_parent_sandbox_rejected_syscalls: (SELECT AS STRUCT key, extractCountHistogram(value) FROM UNNEST(histograms.parent.sandbox_rejected_syscalls)),
-  histogram_content_sandbox_rejected_syscalls: (SELECT AS STRUCT key, extractCountHistogram(value) FROM UNNEST(histograms.content.sandbox_rejected_syscalls)),
+  histogram_parent_sandbox_rejected_syscalls: histograms.parent.sandbox_rejected_syscalls.map(element -> {
+    return {key: element.key, value: extractCountHistogram(value)};
+  }),
+  histogram_content_sandbox_rejected_syscalls: histograms.content.sandbox_rejected_syscalls.map(element -> {
+    return {key: element.key, value: extractCountHistogram(value)};
+  }),
   histogram_parent_search_service_init_ms: extractHistogramMap(histograms.parent.search_service_init_ms),
   histogram_parent_ssl_handshake_result: extractHistogramMap(histograms.parent.ssl_handshake_result),
   histogram_content_ssl_handshake_result: extractHistogramMap(histograms.content.ssl_handshake_result),
@@ -799,10 +809,10 @@ return {
   histogram_parent_update_state_code_complete_startup: extractHistogramMap(histograms.parent.update_state_code_complete_startup),
   histogram_parent_update_status_error_code_partial_startup: extractHistogramMap(histograms.parent.update_status_error_code_partial_startup),
   histogram_parent_update_status_error_code_complete_startup: extractHistogramMap(histograms.parent.update_status_error_code_complete_startup),
-//histogram_all_uptake_remote_content_result_1: (
-//  SELECT AS STRUCT
-//    key,
-//    extractCategoricalHistogramMap(
+//histogram_all_uptake_remote_content_result_1: histograms.all.uptake_remote_content_result_1.map(element -> {
+//  return {
+//    key: element.key,
+//    value: extractCategoricalHistogramMap(
 //      value,
 //      [
 //        'up_to_date', 'success', 'backoff', 'pref_disabled', 'parse_error', 'content_error', 'sign_error', 'sign_retry_error',
@@ -811,9 +821,8 @@ return {
 //        'custom_4_error', 'custom_5_error'
 //      ]
 //    )
-//  FROM
-//    UNNEST(histograms.all.uptake_remote_content_result_1)
-//),
+//  };
+//}),
   histogram_parent_webext_background_page_load_ms: extractHistogramMap(histograms.parent.webext_background_page_load_ms),
   histogram_parent_webext_browseraction_popup_open_ms: extractHistogramMap(histograms.parent.webext_browseraction_popup_open_ms),
   histogram_parent_webext_browseraction_popup_preload_result_count: extractCategoricalHistogramMap(
