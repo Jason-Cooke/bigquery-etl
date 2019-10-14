@@ -16,6 +16,37 @@ CREATE TEMP FUNCTION
     LIMIT
       1 ));
 --
+-- Return the version of the search addon if it exists, null otherwise
+CREATE TEMP FUNCTION get_search_addon_version(active_addons ANY type) AS (
+  (
+    SELECT
+      element.version
+    FROM
+      (
+        SELECT
+          list,
+          _offset_1
+        FROM
+          UNNEST(active_addons)
+        WITH
+          OFFSET AS _offset_1
+      ),
+      UNNEST(list)
+    WITH
+      OFFSET AS _offset_2
+    WHERE
+      element.addon_id = 'followonsearch@mozilla.com'
+    GROUP BY
+      element.version
+    ORDER BY
+      COUNT(element.version) DESC,
+      MAX(_offset_1) DESC,
+      MAX(_offset_2) DESC
+    LIMIT
+      1
+  )
+);
+
 WITH
   augmented AS (
   SELECT
@@ -57,7 +88,7 @@ WITH
       FROM
         UNNEST(scalar_parent_browser_search_with_ads.key_value) ) ) AS _searches
   FROM
-    main_summary_v4 ),
+    telemetry_derived.main_summary_v4 ),
   flattened AS (
   SELECT
     *
@@ -77,11 +108,12 @@ WITH
   windowed AS (
   SELECT
     ROW_NUMBER() OVER w1_unframed AS _n,
-    submission_date_s3 AS submission_date,
+    submission_date,
     client_id,
     engine,
     source,
     udf_mode_last(ARRAY_AGG(country) OVER w1) AS country,
+    get_search_addon_version(ARRAY_AGG(active_addons) OVER w1) AS addon_version,
     udf_mode_last(ARRAY_AGG(app_version) OVER w1) AS app_version,
     udf_mode_last(ARRAY_AGG(distribution_id) OVER w1) AS distribution_id,
     udf_mode_last(ARRAY_AGG(locale) OVER w1) AS locale,
@@ -96,7 +128,7 @@ WITH
     udf_mode_last(ARRAY_AGG(default_search_engine_data_submission_url) OVER w1) AS default_search_engine_data_submission_url,
     udf_mode_last(ARRAY_AGG(sample_id) OVER w1) AS sample_id,
     COUNTIF(subsession_counter = 1) OVER w1 AS sessions_started_on_this_day,
-    UNIX_DATE(DATE(SAFE.TIMESTAMP(subsession_start_date))) - profile_creation_date AS profile_age_in_days,
+    SAFE_SUBTRACT(UNIX_DATE(DATE(SAFE.TIMESTAMP(subsession_start_date))), profile_creation_date) AS profile_age_in_days,
     SUM(subsession_length/NUMERIC '3600') OVER w1 AS subsession_hours_sum,
     AVG(active_addons_count) OVER w1 AS active_addons_count_mean,
     MAX(scalar_parent_browser_engagement_max_concurrent_tab_count) OVER w1 AS max_concurrent_tab_count_max,
@@ -140,7 +172,7 @@ WITH
   FROM
     flattened
   WHERE
-    submission_date_s3 = @submission_date
+    submission_date = @submission_date
     AND client_id IS NOT NULL
     AND (count < 10000
       OR count IS NULL)
@@ -149,7 +181,7 @@ WITH
     w1 AS (
     PARTITION BY
       client_id,
-      submission_date_s3,
+      submission_date,
       engine,
       source,
       type
@@ -160,7 +192,7 @@ WITH
     w1_unframed AS (
     PARTITION BY
       client_id,
-      submission_date_s3,
+      submission_date,
       engine,
       source,
       type
