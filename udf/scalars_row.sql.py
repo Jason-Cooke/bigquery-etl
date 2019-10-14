@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Generate udf/scalars_row.sql."""
 
 import itertools
 import json
@@ -15,7 +16,7 @@ def convert_camel_case(name):
 
 
 def collect_probes(probes, schema_fields):
-    """Extract scalars and keyed scalars."""
+    """Collect scalars from probes and schema fields."""
     scalars = {"main": [], "content": [], "gpu": []}
     keyed_scalars = {"main": [], "content": [], "gpu": []}
     for probe in probes:
@@ -48,6 +49,7 @@ def collect_probes(probes, schema_fields):
 
 
 def search(target, path):
+    """List the field names available in target at path."""
     for key in path:
         for item in target:
             if item["name"] == key:
@@ -57,6 +59,7 @@ def search(target, path):
 
 
 def collect_fields(main_schema):
+    """Collect scalar fields from main ping schema."""
     scalars = {
         "main": search(main_schema, ["payload", "processes", "parent", "scalars"]),
         "content": search(main_schema, ["payload", "processes", "content", "scalars"]),
@@ -73,6 +76,7 @@ def collect_fields(main_schema):
 
 
 def make_field(source, target, s, schema_fields, keyed=False):
+    """Build a scalar definition."""
     (name, sql_type) = s
     if name in schema_fields:
         source = "processes.%s.%s" % (source, name)
@@ -90,6 +94,7 @@ def make_field(source, target, s, schema_fields, keyed=False):
 
 
 def main(root):
+    """Main."""
     main_schema_json = open("main.4.bq")
     main_schema = json.load(main_schema_json)
     schema_fields = collect_fields(main_schema)
