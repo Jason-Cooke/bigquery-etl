@@ -33,8 +33,7 @@ CREATE TEMP FUNCTION
     WHERE
       value > 0));
 CREATE TEMP FUNCTION
-  udf_get_experiments(experiments ARRAY<STRUCT<key STRING, value STRUCT<branch STRING>>>)
-  RETURNS STRUCT<key_value ARRAY<STRUCT<key STRING, value STRING>>> AS ((
+  udf_get_experiments(experiments ANY TYPE) AS ((
     SELECT
     AS STRUCT
       ARRAY_AGG(
