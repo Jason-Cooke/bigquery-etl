@@ -3,22 +3,21 @@
 import itertools
 import json
 import re
-import urllib
 import os.path
 
 SCALAR_TYPES = {"uint": "INT64", "string": "STRING", "boolean": "BOOL"}
 
 
 def convert_camel_case(name):
+    """Convert camel case to snake case."""
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def collect_probes(probes, schema_fields):
+    """Extract scalars and keyed scalars."""
     scalars = {"main": [], "content": [], "gpu": []}
     keyed_scalars = {"main": [], "content": [], "gpu": []}
-    histograms = {"main": [], "content": [], "gpu": []}
-    keyed_histograms = {"main": [], "content": [], "gpu": []}
     for probe in probes:
         history = list(itertools.chain.from_iterable(probe["history"].values()))
         record_in_processes = set().union(
@@ -45,7 +44,7 @@ def collect_probes(probes, schema_fields):
                     ),
                 )
             )
-    return scalars, histograms, keyed_scalars, keyed_histograms
+    return scalars, keyed_scalars
 
 
 def search(target, path):
@@ -70,14 +69,7 @@ def collect_fields(main_schema):
             main_schema, ["payload", "processes", "content", "keyed_scalars"]
         ),
     }
-    histograms = {"main": [], "content": []}
-    keyed_histograms = {"main": [], "content": [], "gpu": []}
-    return {
-        "scalars": scalars,
-        "histograms": histograms,
-        "keyed_scalars": keyed_scalars,
-        "keyed_histograms": keyed_histograms,
-    }
+    return {"scalars": scalars, "keyed_scalars": keyed_scalars}
 
 
 def make_field(source, target, s, schema_fields, keyed=False):
@@ -104,21 +96,7 @@ def main(root):
 
     probes_json = open("all_probes.json")
     probes = json.load(probes_json).values()
-    scalars, histograms, keyed_scalars, keyed_histograms = collect_probes(
-        probes, schema_fields
-    )
-    summary_scalar_types = ",\n".join(
-        ["scalar_parent_%s %s" % s for s in scalars["main"]]
-        + ["scalar_content_%s %s" % s for s in scalars["content"]]
-        + [
-            "scalar_parent_%s ARRAY<STRUCT<key STRING, value %s>>" % s
-            for s in keyed_scalars["main"]
-        ]
-        + [
-            "scalar_content_%s ARRAY<STRUCT<key STRING, value %s>>" % s
-            for s in keyed_scalars["content"]
-        ]
-    )
+    scalars, keyed_scalars = collect_probes(probes, schema_fields)
     scalar_fields = ",\n".join(
         [
             make_field(
@@ -163,7 +141,7 @@ CREATE TEMP FUNCTION udf_scalar_row(processes ANY TYPE, additional_properties ST
     %s
   )
 );
-""" % (
+""" % (  # noqa E501
         scalar_fields,
     )
 
@@ -171,5 +149,4 @@ CREATE TEMP FUNCTION udf_scalar_row(processes ANY TYPE, additional_properties ST
 
 
 if __name__ == "__main__":
-    import os.path
     main(os.path.dirname(__file__))
