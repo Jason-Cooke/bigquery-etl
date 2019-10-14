@@ -1,9 +1,9 @@
 SELECT
-  part1.*,
-  part2.* EXCEPT(document_id)
+  main_summary_v4_part1.*,
+  main_summary_v4_part2.* EXCEPT(document_id)
 FROM
-  part1
+  main_summary_v4_part1
 JOIN
-  part2
+  main_summary_v4_part2
 USING
   (document_id)
