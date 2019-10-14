@@ -1195,55 +1195,35 @@ SELECT
   environment.system.gfx.features.compositor AS gfx_compositor,
   udf_js_get_quantum_ready(environment.settings.e10s_enabled, environment.addons.active_addons, JSON_EXTRACT(additional_properties, "$.environment.addons.activeAddons"), environment.addons.theme) AS quantum_ready,
 
-udf_histogram_to_threshold_count(payload.histograms.gc_max_pause_ms_2, 150),
-udf_histogram_to_threshold_count(payload.histograms.gc_max_pause_ms_2, 250),
-udf_histogram_to_threshold_count(payload.histograms.gc_max_pause_ms_2, 2500),
+  udf_histogram_to_threshold_count(payload.histograms.gc_max_pause_ms_2, 150),
+  udf_histogram_to_threshold_count(payload.histograms.gc_max_pause_ms_2, 250),
+  udf_histogram_to_threshold_count(payload.histograms.gc_max_pause_ms_2, 2500),
 
-udf_histogram_to_threshold_count(payload.processes.content.histograms.gc_max_pause_ms_2, 150),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.gc_max_pause_ms_2, 250),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.gc_max_pause_ms_2, 2500),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.gc_max_pause_ms_2, 150),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.gc_max_pause_ms_2, 250),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.gc_max_pause_ms_2, 2500),
 
-udf_histogram_to_threshold_count(payload.histograms.cycle_collector_max_pause, 150),
-udf_histogram_to_threshold_count(payload.histograms.cycle_collector_max_pause, 250),
-udf_histogram_to_threshold_count(payload.histograms.cycle_collector_max_pause, 2500),
+  udf_histogram_to_threshold_count(payload.histograms.cycle_collector_max_pause, 150),
+  udf_histogram_to_threshold_count(payload.histograms.cycle_collector_max_pause, 250),
+  udf_histogram_to_threshold_count(payload.histograms.cycle_collector_max_pause, 2500),
 
-udf_histogram_to_threshold_count(payload.processes.content.histograms.cycle_collector_max_pause, 150),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.cycle_collector_max_pause, 250),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.cycle_collector_max_pause, 2500),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.cycle_collector_max_pause, 150),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.cycle_collector_max_pause, 250),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.cycle_collector_max_pause, 2500),
 
-udf_histogram_to_threshold_count(payload.histograms.input_event_response_coalesced_ms, 150),
-udf_histogram_to_threshold_count(payload.histograms.input_event_response_coalesced_ms, 250),
-udf_histogram_to_threshold_count(payload.histograms.input_event_response_coalesced_ms, 2500),
+  udf_histogram_to_threshold_count(payload.histograms.input_event_response_coalesced_ms, 150),
+  udf_histogram_to_threshold_count(payload.histograms.input_event_response_coalesced_ms, 250),
+  udf_histogram_to_threshold_count(payload.histograms.input_event_response_coalesced_ms, 2500),
 
-udf_histogram_to_threshold_count(payload.processes.content.histograms.input_event_response_coalesced_ms, 150),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.input_event_response_coalesced_ms, 250),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.input_event_response_coalesced_ms, 2500),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.input_event_response_coalesced_ms, 150),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.input_event_response_coalesced_ms, 250),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.input_event_response_coalesced_ms, 2500),
 
-udf_histogram_to_threshold_count(payload.histograms.ghost_windows, 1),
-udf_histogram_to_threshold_count(payload.processes.content.histograms.ghost_windows, 1),
-udf_get_user_prefs(JSON_EXTRACT(additional_properties, "$.environment.settings.user_prefs")).*,
-udf_scalar_row(payload.processes, additional_properties).*
+  udf_histogram_to_threshold_count(payload.histograms.ghost_windows, 1),
+  udf_histogram_to_threshold_count(payload.processes.content.histograms.ghost_windows, 1),
 
-  /*
-  TODO
-  udf_histogram_row(STRUCT(
-    STRUCT(
-      payload.processes.content.histograms AS content,
-      payload.processes.gpu.histograms AS gpu,
-      payload.histograms AS parent
-    ) AS histograms,
-    STRUCT(
-      payload.processes.content.keyed_histograms AS content,
-      payload.processes.gpu.keyed_histograms AS gpu,
-      payload.keyed_histograms AS parent
-    ) AS keyed_histograms,
-    [] AS histogramDefinitions,
-    [] AS naturalHistogramRepresentationList)).*,
-  udf_addon_scalars_row(STRUCT(
-    payload.processes.dynamic.scalars AS addon_scalars,
-    payload.processes.dynamic.keyed_scalars AS addon_keyed_scalars,
-    ARRAY(SELECT * FROM scalarDefinitions WHERE process != "dynamic") AS scalarDefinitions)).*
-  */
+  udf_get_user_prefs(JSON_EXTRACT(additional_properties, "$.environment.settings.user_prefs")).*,
+  udf_scalar_row(payload.processes, additional_properties).*
 FROM
   `moz-fx-data-shared-prod.telemetry_stable.main_v4`
 WHERE

@@ -30,8 +30,6 @@ def collect_probes(probes, schema_fields):
                 if any(h["details"]["keyed"] for h in history)
                 else scalars
             )
-        # elif probe['type'] == 'histogram':
-        #    collection = keyedHistograms if any(h['details']['keyed'] for h in history) else histograms
         else:
             continue
         if record_in_processes == set(["all"]):
@@ -100,12 +98,10 @@ def make_field(source, target, s, schema_fields, keyed=False):
 
 
 def main(root):
-    # main_schema_json = urllib.open("https://github.com/mozilla-services/mozilla-pipeline-schemas/raw/generated-schemas/schemas/telemetry/main/main.4.bq")
     main_schema_json = open("main.4.bq")
     main_schema = json.load(main_schema_json)
     schema_fields = collect_fields(main_schema)
 
-    # probes = urllib.open("https://probeinfo.telemetry.mozilla.org/firefox/all/main/all_probes")
     probes_json = open("all_probes.json")
     probes = json.load(probes_json).values()
     scalars, histograms, keyed_scalars, keyed_histograms = collect_probes(
@@ -162,38 +158,18 @@ def main(root):
     )
 
     scalars_sql = """
-CREATE TEMP FUNCTION
-  udf_scalar_row(processes ANY TYPE, additional_properties STRING)
-  returns STRUCT<%s>
-  AS ((
-    SELECT AS STRUCT
-      %s
-  ));
+CREATE TEMP FUNCTION udf_scalar_row(processes ANY TYPE, additional_properties STRING) AS (
+  STRUCT(
+    %s
+  )
+);
 """ % (
-        summary_scalar_types,
         scalar_fields,
     )
 
-    #    summary_histogram_types = ', '.join([('%s STRING' % s[1:]) for s in histograms['main'] + histograms['content'] +
-    #                                      keyedHistograms['main'] + keyedHistograms['content']])
-    #    histogram_fields = ', '.join(['%s AS scalar_parent_%s' % s[:2] for s in histograms['main']] +
-    #                              ['%s AS scalar_content_%s' % s[:2] for s in histograms['content']] +
-    #                              ['STRUCT(%s AS key_value) as histogram_parent_%s' % s[:2] for s in keyedHistograms['main']] +
-    #                              ['STRUCT(%s AS key_value) as histogram_content_%s' % s[:2] for s in keyedHistograms['content']])
-
-    #    summary_histogram_types = ', '.join(['%s %s' % ()])
-    #    histogram_fields = ', '.join([])
-    #    histograms_sql = """
-    # CREATE TEMP FUNCTION
-    #   udf_histogram_row(content_histograms ANY TYPE, parent_histograms ANY TYPE, content_keyed_histograms ANY TYPE, parent_keyed_histograms ANY TYPE)
-    #   returns ANY TYPE
-    #   AS (
-    #     %s
-    #   );
-    # """ % (summary_histogram_types, histogram_fields)
     open(os.path.join(root, "scalar_row.sql"), "w").write(scalars_sql)
-    # open(os.path.join(root, "histograms_row.sql"), 'w').write(histograms_sql)
 
 
 if __name__ == "__main__":
-    main("udf/")
+    import os.path
+    main(os.path.dirname(__file__))
