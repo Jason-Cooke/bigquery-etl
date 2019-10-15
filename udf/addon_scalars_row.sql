@@ -1,7 +1,7 @@
 /*
 TODO
 */
-CREATE TEMP FUNCTION udf_addon_scalars_row(processes ANY TYPE, additional_properties STRING) AS (
+CREATE TEMP FUNCTION udf_addon_scalars_row(payload ANY TYPE, additional_properties STRING) AS (
   STRUCT(
     null as _
   )
