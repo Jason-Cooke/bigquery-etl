@@ -1,4 +1,4 @@
-CREATE TEMP FUNCTION udf_addon_scalars_row(processes ANY TYPE, additional_properties STRING) AS (
+CREATE TEMP FUNCTION udf_addon_scalars_row(payload ANY TYPE, additional_properties STRING) AS (
   STRUCT(
     null as _
   )
@@ -22,7 +22,7 @@ CREATE TEMP FUNCTION udf_allowed_histograms(payload ANY TYPE, additional_propert
       payload.processes.content.histograms.devtools_custom_opened_count,
       payload.processes.content.histograms.devtools_dom_opened_count,
       payload.processes.content.histograms.devtools_eyedropper_opened_count,
-payload.processes.content.histograms.devtools_fontinspector_opened_count,
+      payload.processes.content.histograms.devtools_fontinspector_opened_count,
       payload.processes.content.histograms.devtools_inspector_opened_count,
       payload.processes.content.histograms.devtools_jsbrowserdebugger_opened_count,
       payload.processes.content.histograms.devtools_jsdebugger_opened_count,
@@ -105,7 +105,14 @@ payload.processes.content.histograms.devtools_fontinspector_opened_count,
       payload.processes.content.histograms.webvr_users_view_in
     ) AS content,
     STRUCT(
-payload.processes.gpu.keyed_histograms.ipc_read_main_thread_latency_ms
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.CHECKERBOARD_SEVERITY') AS checkerboard_severity,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.COMPOSITE_TIME') AS composite_time,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.CONTENT_FRAME_TIME') AS content_frame_time,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.GPU_PROCESS_INITIALIZATION_TIME_MS') AS gpu_process_initialization_time_ms,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.WEBVR_TIME_SPENT_VIEWING_IN_OCULUS') AS webvr_time_spent_viewing_in_oculus,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.WEBVR_TIME_SPENT_VIEWING_IN_OPENVR') AS webvr_time_spent_viewing_in_openvr,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.WEBVR_USERS_VIEW_IN') AS webvr_users_view_in,
+      payload.processes.gpu.keyed_histograms.ipc_read_main_thread_latency_ms
     ) AS gpu,
     STRUCT(
       payload.histograms.a11y_consumers,
@@ -113,7 +120,7 @@ payload.processes.gpu.keyed_histograms.ipc_read_main_thread_latency_ms
       payload.histograms.cert_validation_success_by_ca,
       payload.histograms.checkerboard_severity,
       payload.histograms.composite_time,
-payload.histograms.content_paint_time,
+      payload.histograms.content_paint_time,
       payload.histograms.cookie_behavior,
       payload.histograms.cycle_collector_max_pause,
       payload.histograms.devtools_about_devtools_opened_key,
@@ -271,7 +278,7 @@ content STRUCT<
       devtools_custom_opened_count STRING,
       devtools_dom_opened_count STRING,
       devtools_eyedropper_opened_count STRING,
-devtools_fontinspector_opened_count STRING,
+      devtools_fontinspector_opened_count STRING,
       devtools_inspector_opened_count STRING,
       devtools_jsbrowserdebugger_opened_count STRING,
       devtools_jsdebugger_opened_count STRING,
@@ -354,7 +361,14 @@ devtools_fontinspector_opened_count STRING,
       webvr_users_view_in STRING
     >,
     gpu STRUCT<
-ipc_read_main_thread_latency_ms ARRAY<STRUCT<key STRING, value STRING>>
+      checkerboard_severity STRING,
+      composite_time STRING,
+      content_frame_time STRING,
+      gpu_process_initialization_time_ms STRING,
+      webvr_time_spent_viewing_in_oculus STRING,
+      webvr_time_spent_viewing_in_openvr STRING,
+      webvr_users_view_in STRING,
+      ipc_read_main_thread_latency_ms ARRAY<STRUCT<key STRING, value STRING>>
     >,
     parent STRUCT<
       a11y_consumers STRING,
@@ -362,7 +376,7 @@ ipc_read_main_thread_latency_ms ARRAY<STRUCT<key STRING, value STRING>>
       cert_validation_success_by_ca STRING,
       checkerboard_severity STRING,
       composite_time STRING,
-content_paint_time STRING,
+      content_paint_time STRING,
       cookie_behavior STRING,
       cycle_collector_max_pause STRING,
       devtools_about_devtools_opened_key STRING,
@@ -1076,7 +1090,7 @@ return {
 SELECT
   document_id,
   udf_js_histogram_row(udf_allowed_histograms(payload, additional_properties)).*,
-  udf_addon_scalars_row(payload.processes, additional_properties).*
+  udf_addon_scalars_row(payload, additional_properties).*
 FROM
   `moz-fx-data-shared-prod.telemetry_stable.main_v4`
 WHERE

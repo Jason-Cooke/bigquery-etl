@@ -26,8 +26,6 @@ CREATE TEMP FUNCTION udf_js_histogram_row(
       devtools_custom_opened_count STRING,
       devtools_dom_opened_count STRING,
       devtools_eyedropper_opened_count STRING,
---    devtools_fonteditor_n_font_axes STRING,
---    devtools_fonteditor_n_fonts_rendered STRING,
       devtools_fontinspector_opened_count STRING,
       devtools_inspector_opened_count STRING,
       devtools_jsbrowserdebugger_opened_count STRING,
@@ -111,13 +109,13 @@ CREATE TEMP FUNCTION udf_js_histogram_row(
       webvr_users_view_in STRING
     >,
     gpu STRUCT<
---    checkerboard_severity STRING,
---    composite_time STRING,
---    content_frame_time STRING,
---    gpu_process_initialization_time_ms STRING,
---    webvr_time_spent_viewing_in_oculus STRING,
---    webvr_time_spent_viewing_in_openvr STRING,
---    webvr_users_view_in STRING,
+      checkerboard_severity STRING,
+      composite_time STRING,
+      content_frame_time STRING,
+      gpu_process_initialization_time_ms STRING,
+      webvr_time_spent_viewing_in_oculus STRING,
+      webvr_time_spent_viewing_in_openvr STRING,
+      webvr_users_view_in STRING,
       ipc_read_main_thread_latency_ms ARRAY<STRUCT<key STRING, value STRING>>
     >,
     parent STRUCT<
@@ -126,7 +124,6 @@ CREATE TEMP FUNCTION udf_js_histogram_row(
       cert_validation_success_by_ca STRING,
       checkerboard_severity STRING,
       composite_time STRING,
---    content_frame_time STRING,
       content_paint_time STRING,
       cookie_behavior STRING,
       cycle_collector_max_pause STRING,

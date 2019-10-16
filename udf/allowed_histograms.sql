@@ -17,8 +17,6 @@ CREATE TEMP FUNCTION udf_allowed_histograms(payload ANY TYPE, additional_propert
       payload.processes.content.histograms.devtools_custom_opened_count,
       payload.processes.content.histograms.devtools_dom_opened_count,
       payload.processes.content.histograms.devtools_eyedropper_opened_count,
---    payload.processes.content.histograms.devtools_fonteditor_n_font_axes,
---    payload.processes.content.histograms.devtools_fonteditor_n_fonts_rendered,
       payload.processes.content.histograms.devtools_fontinspector_opened_count,
       payload.processes.content.histograms.devtools_inspector_opened_count,
       payload.processes.content.histograms.devtools_jsbrowserdebugger_opened_count,
@@ -102,13 +100,13 @@ CREATE TEMP FUNCTION udf_allowed_histograms(payload ANY TYPE, additional_propert
       payload.processes.content.histograms.webvr_users_view_in
     ) AS content,
     STRUCT(
---    payload.processes.gpu.histograms.checkerboard_severity,
---    payload.processes.gpu.histograms.composite_time,
---    payload.processes.gpu.histograms.content_frame_time,
---    payload.processes.gpu.histograms.gpu_process_initialization_time_ms,
---    payload.processes.gpu.histograms.webvr_time_spent_viewing_in_oculus,
---    payload.processes.gpu.histograms.webvr_time_spent_viewing_in_openvr,
---    payload.processes.gpu.histograms.webvr_users_view_in,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.CHECKERBOARD_SEVERITY') AS checkerboard_severity,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.COMPOSITE_TIME') AS composite_time,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.CONTENT_FRAME_TIME') AS content_frame_time,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.GPU_PROCESS_INITIALIZATION_TIME_MS') AS gpu_process_initialization_time_ms,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.WEBVR_TIME_SPENT_VIEWING_IN_OCULUS') AS webvr_time_spent_viewing_in_oculus,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.WEBVR_TIME_SPENT_VIEWING_IN_OPENVR') AS webvr_time_spent_viewing_in_openvr,
+      JSON_EXTRACT(additional_properties, '$.payload.processes.gpu.histograms.WEBVR_USERS_VIEW_IN') AS webvr_users_view_in,
       payload.processes.gpu.keyed_histograms.ipc_read_main_thread_latency_ms
     ) AS gpu,
     STRUCT(
@@ -117,7 +115,6 @@ CREATE TEMP FUNCTION udf_allowed_histograms(payload ANY TYPE, additional_propert
       payload.histograms.cert_validation_success_by_ca,
       payload.histograms.checkerboard_severity,
       payload.histograms.composite_time,
---    payload.histograms.content_frame_time,
       payload.histograms.content_paint_time,
       payload.histograms.cookie_behavior,
       payload.histograms.cycle_collector_max_pause,
